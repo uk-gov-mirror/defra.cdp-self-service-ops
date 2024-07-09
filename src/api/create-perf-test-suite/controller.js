@@ -7,7 +7,8 @@ import { raiseInfraPullRequest } from '~/src/api/helpers/create/raise-infra-pull
 import { testRunnerEnvironments } from '~/src/config/test-runner-environments'
 import { creations } from '~/src/constants/creations'
 import { createTestSuiteStatus } from '~/src/api/helpers/create/create-test-suite-status'
-import { createPerfTestSuite } from '~/src/api/create-perf-test-suite/helpers/workflow/create-perf-test-suite'
+import { createTestSuiteFromTemplate } from '~/src/api/helpers/create/create-test-suite-from-template'
+import { createSquidConfig } from '~/src/api/helpers/create/create-squid-config'
 
 const createPerfTestSuiteController = {
   options: {
@@ -53,7 +54,10 @@ const createPerfTestSuiteController = {
       )
     }
 
-    await createPerfTestSuite(request, repositoryName, payload, team)
+    const template = config.get('createPerfTestSuiteWorkflow')
+    await createTestSuiteFromTemplate(request, template, repositoryName, team)
+
+    await createSquidConfig(request, repositoryName)
 
     await raiseInfraPullRequest(
       request,

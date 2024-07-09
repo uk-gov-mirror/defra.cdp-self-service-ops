@@ -2,12 +2,13 @@ import Boom from '@hapi/boom'
 import { isNil } from 'lodash'
 import { config } from '~/src/config'
 import { envTestSuiteValidation } from '~/src/api/create-env-test-suite/helpers/schema/env-test-suite-validation'
-import { createEnvTestSuite } from '~/src/api/create-env-test-suite/helpers/workflow/create-env-test-suite'
 import { updateOverallStatus } from '~/src/api/create-microservice/helpers/save-status'
 import { raiseInfraPullRequest } from '~/src/api/helpers/create/raise-infra-pull-request'
 import { testRunnerEnvironments } from '~/src/config/test-runner-environments'
 import { createTestSuiteStatus } from '~/src/api/helpers/create/create-test-suite-status'
 import { creations } from '~/src/constants/creations'
+import { createTestSuiteFromTemplate } from '~/src/api/helpers/create/create-test-suite-from-template'
+import { createSquidConfig } from '~/src/api/helpers/create/create-squid-config'
 
 const createEnvTestSuiteController = {
   options: {
@@ -53,7 +54,10 @@ const createEnvTestSuiteController = {
       )
     }
 
-    await createEnvTestSuite(request, repositoryName, payload, team)
+    const template = config.get('createEnvTestSuiteWorkflow')
+    await createTestSuiteFromTemplate(request, template, repositoryName, team)
+
+    await createSquidConfig(request, repositoryName)
 
     await raiseInfraPullRequest(
       request,

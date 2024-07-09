@@ -28,8 +28,11 @@ const workflowRunHandlerV2 = async (db, message) => {
     case config.get('gitHubRepoCreateWorkflows'):
       await handleCdpCreateWorkflows(db, message)
       break
+    case config.get('gitHubRepoSquid'):
+      await handleTriggeredWorkflow(db, message)
+      break
     default:
-      await handleGenericWorkflow(db, message)
+      await handlePRWorkflow(db, message)
       break
   }
 }
@@ -69,7 +72,7 @@ const handleTfSvcInfra = async (db, message) => {
       logger.info(
         'handling tf-svc-infra workflow completed message from non-main'
       )
-      await handleGenericWorkflow(db, message)
+      await handlePRWorkflow(db, message)
     }
   } catch (e) {
     logger.error(e)
@@ -106,7 +109,6 @@ const handleCdpCreateWorkflows = async (db, message) => {
       },
       {
         $set: {
-          status: workflowStatus,
           'createRepository.status': workflowStatus
         }
       }
@@ -122,14 +124,61 @@ const handleCdpCreateWorkflows = async (db, message) => {
       )
     }
 
-    // TODO combine this and new update-repository-status work
     await updateOverallStatus(db, repoName)
   } catch (e) {
     logger.error(e)
   }
 }
 
-const handleGenericWorkflow = async (db, message) => {
+/**
+ * Generic handler for any workflow messages that are triggered directly via workflow-dispatch.
+ * The thing to be aware of here is that by convention we set the `workflow_run.name` value to
+ * link to the status record.
+ * @param db
+ * @param message
+ * @returns {Promise<void>}
+ */
+const handleTriggeredWorkflow = async (db, message) => {
+  try {
+    const workflowRepo = message.repository?.name
+    const headBranch = message.workflow_run?.head_branch
+    const serviceRepo = message.workflow_run?.name // we repurpose the name to track name of repo its creating
+    const status = findByRepoName(db, serviceRepo)
+
+    if (status === null) {
+      return
+    }
+
+    const workflowStatus = normalizeStatus(
+      message.action,
+      message.workflow_run?.conclusion
+    )
+
+    logger.info(
+      `attempting to update ${message.repository?.name} status for ${serviceRepo} to ${workflowStatus}`
+    )
+
+    await updateWorkflowStatus(
+      db,
+      serviceRepo,
+      workflowRepo,
+      headBranch,
+      workflowStatus,
+      trimWorkflowRun(message.workflow_run)
+    )
+    await updateOverallStatus(db, serviceRepo)
+  } catch (e) {
+    logger.error(e)
+  }
+}
+
+/**
+ * Generic workflow handler for workflows triggered by PR/merges. We track these by matching on commit hashes.
+ * @param db
+ * @param message
+ * @returns {Promise<void>}
+ */
+const handlePRWorkflow = async (db, message) => {
   try {
     const workflowRepo = message.repository?.name
     const headBranch = message.workflow_run?.head_branch

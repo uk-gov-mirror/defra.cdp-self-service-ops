@@ -33,13 +33,21 @@ async function updatePrStatus(db, repo, field, status, mergedSha) {
   )
 }
 
+/**
+ * @param {*} db        - mongodb database
+ * @param {string} repo - status record to update
+ * @param {*} workflow  - workflow step to update (e.g. cdp-tf-svc-infra)
+ * @param {*} branch    - is this update related to the PR or the main branch
+ * @param {*} status    - status of this step
+ * @param {{path, updated_at, html_url, name, created_at, id}} workflowPayload - extra data to store against this step
+ */
 async function updateWorkflowStatus(
   db,
   repo,
   workflow,
   branch,
   status,
-  workflowStatus
+  workflowPayload
 ) {
   const statusField = `${workflow}.status`
   const workflowField = `${workflow}.${branch}.workflow` // branch is either 'main' or 'pr'
@@ -48,7 +56,7 @@ async function updateWorkflowStatus(
       repositoryName: repo,
       [statusField]: { $nin: dontOverwriteStatus(status) }
     },
-    { $set: { [statusField]: status, [workflowField]: workflowStatus } }
+    { $set: { [statusField]: status, [workflowField]: workflowPayload } }
   )
 }
 

@@ -5,6 +5,7 @@ import { creations } from '~/src/constants/creations'
 const tfSvcInfra = config.get('gitHubRepoTfServiceInfra')
 const cdpAppConfig = config.get('gitHubRepoConfig')
 const cdpNginxUpstream = config.get('gitHubRepoNginx')
+const cdpSquidConfig = config.get('gitHubRepoSquid')
 
 function getStatusKeys(statusRecord) {
   const statusKeys = []
@@ -20,7 +21,7 @@ function getStatusKeys(statusRecord) {
       creations.perfTestsuite
     ].includes(statusRecord?.kind)
   ) {
-    statusKeys.push('createRepository', tfSvcInfra)
+    statusKeys.push('createRepository', tfSvcInfra, cdpSquidConfig)
   }
 
   if (statusRecord?.kind === creations.microservice) {
@@ -28,7 +29,8 @@ function getStatusKeys(statusRecord) {
       'createRepository',
       cdpNginxUpstream,
       cdpAppConfig,
-      tfSvcInfra
+      tfSvcInfra,
+      cdpSquidConfig
     )
   }
 
@@ -88,6 +90,9 @@ async function initCreationStatus(
       status: statuses.notRequested
     },
     [cdpNginxUpstream]: {
+      status: statuses.notRequested
+    },
+    [cdpSquidConfig]: {
       status: statuses.notRequested
     }
   }

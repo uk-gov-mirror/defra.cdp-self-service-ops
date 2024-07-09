@@ -1,13 +1,14 @@
 import Boom from '@hapi/boom'
 import { isNil } from 'lodash'
 import { config } from '~/src/config'
-import { createSmokeTestSuite } from '~/src/api/create-smoke-test-suite/helpers/workflow/create-smoke-test-suite'
 import { updateOverallStatus } from '~/src/api/create-microservice/helpers/save-status'
 import { raiseInfraPullRequest } from '~/src/api/helpers/create/raise-infra-pull-request'
 import { testRunnerEnvironments } from '~/src/config/test-runner-environments'
 import { createTestSuiteStatus } from '~/src/api/helpers/create/create-test-suite-status'
 import { creations } from '~/src/constants/creations'
 import { smokeTestSuiteValidation } from '~/src/api/create-smoke-test-suite/helpers/schema/smoke-test-suite-validation'
+import { createTestSuiteFromTemplate } from '~/src/api/helpers/create/create-test-suite-from-template'
+import { createSquidConfig } from '~/src/api/helpers/create/create-squid-config'
 
 const createSmokeTestSuiteController = {
   options: {
@@ -53,7 +54,10 @@ const createSmokeTestSuiteController = {
       )
     }
 
-    await createSmokeTestSuite(request, repositoryName, payload, team)
+    const template = config.get('createSmokeTestSuiteWorkflow')
+    await createTestSuiteFromTemplate(request, template, repositoryName, team)
+
+    await createSquidConfig(request, repositoryName)
 
     await raiseInfraPullRequest(
       request,

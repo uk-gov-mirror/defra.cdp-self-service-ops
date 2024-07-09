@@ -4,7 +4,7 @@ import { isNil } from 'lodash'
 import { config } from '~/src/config'
 import { testSuiteValidation } from '~/src/api/create-test-suite/helpers/schema/test-suite-validation'
 import { createTestSuiteStatus } from '~/src/api/create-test-suite/helpers/status/create-test-suite-status'
-import { createTestSuite } from '~/src/api/create-test-suite/helpers/workflow/create-test-suite'
+import { createTestSuiteFromTemplate } from '~/src/api/helpers/create/create-test-suite-from-template'
 
 const createTestSuiteController = {
   options: {
@@ -39,7 +39,9 @@ const createTestSuiteController = {
       payload,
       team
     )
-    await createTestSuite(request, repositoryName, payload, team)
+
+    const template = config.get('createJourneyTestWorkflow')
+    await createTestSuiteFromTemplate(request, template, repositoryName, team)
 
     return h
       .response({

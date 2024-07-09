@@ -120,6 +120,12 @@ const config = convict({
     default: 'cdp-nginx-upstreams',
     env: 'GITHUB_REPO_NGINX'
   },
+  gitHubRepoSquid: {
+    doc: 'GitHub repo to create squid config in',
+    format: String,
+    default: 'cdp-squid-proxy',
+    env: 'GITHUB_REPO_NGINX'
+  },
   gitHubRepoCreateWorkflows: {
     doc: 'GitHub repository containing the create workflows',
     format: String,
@@ -250,6 +256,12 @@ const config = convict({
     format: String,
     default: 'create_smoke_test_suite.yml',
     env: 'CREATE_SMOKE_TEST_SUITE_WORKFLOW'
+  },
+  createSquidConfigWorkflow: {
+    doc: 'Name of workflow to trigger when creating a repository',
+    format: String,
+    default: 'create_service.yml',
+    env: 'CREATE_SQUID_CONFIG_WORKFLOW'
   },
   gitHubBaseUrl: {
     doc: 'Override the gitHub base url for local testing',

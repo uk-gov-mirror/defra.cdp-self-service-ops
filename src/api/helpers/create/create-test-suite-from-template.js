@@ -3,25 +3,41 @@ import { statuses } from '~/src/constants/statuses'
 import { triggerWorkflow } from '~/src/api/helpers/workflow/trigger-workflow'
 import { updateTestSuiteStatus } from '~/src/api/create-test-suite/helpers/status/update-test-suite-status'
 
-async function createPerfTestSuite(request, repositoryName, payload, team) {
+/**
+ *
+ * @param {} request
+ * @param {string} template
+ * @param {string} repositoryName
+ * @param {{id: string, github: string}} team
+ * @returns {Promise<void>}
+ */
+async function createTestSuiteFromTemplate(
+  request,
+  template,
+  repositoryName,
+  team
+) {
   const gitHubOrg = config.get('gitHubOrg')
+  const createWorkflowRepository = config.get('gitHubRepoCreateWorkflows')
+
   const updateStatus = updateTestSuiteStatus(request.db, repositoryName)
 
   try {
     const result = await triggerWorkflow(
+      gitHubOrg,
+      createWorkflowRepository,
+      template,
       {
         repositoryName,
         team: team.github
-      },
-      config.get('createPerfTestSuiteWorkflow')
+      }
     )
 
     request.logger.info(
-      `Create perf test suite: ${repositoryName} workflow triggered successfully`
+      `Create env test suite: ${repositoryName} workflow triggered successfully`
     )
 
     await updateStatus({
-      status: statuses.inProgress,
       createRepository: {
         status: statuses.inProgress,
         url: `https://github.com/${gitHubOrg}/${repositoryName}`,
@@ -30,11 +46,10 @@ async function createPerfTestSuite(request, repositoryName, payload, team) {
     })
   } catch (error) {
     request.logger.error(
-      `Create perf test suite: ${repositoryName} failed: ${error}`
+      `Create env test suite: ${repositoryName} failed: ${error}`
     )
 
     await updateStatus({
-      status: statuses.inProgress,
       createRepository: {
         status: statuses.failure,
         result: error
@@ -43,4 +58,4 @@ async function createPerfTestSuite(request, repositoryName, payload, team) {
   }
 }
 
-export { createPerfTestSuite }
+export { createTestSuiteFromTemplate }

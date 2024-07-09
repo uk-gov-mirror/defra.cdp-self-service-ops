@@ -7,7 +7,8 @@ const validRepos = new Set([
   config.get('gitHubRepoTfServiceInfra'),
   config.get('gitHubRepoConfig'),
   config.get('gitHubRepoNginx'),
-  config.get('gitHubRepoCreateWorkflows')
+  config.get('gitHubRepoCreateWorkflows'),
+  config.get('gitHubRepoSquid')
 ])
 const validActions = new Set(['workflow_run', 'pull_request'])
 
