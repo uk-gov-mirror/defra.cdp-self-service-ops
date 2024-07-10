@@ -124,7 +124,7 @@ const config = convict({
     doc: 'GitHub repo to create squid config in',
     format: String,
     default: 'cdp-squid-proxy',
-    env: 'GITHUB_REPO_NGINX'
+    env: 'GITHUB_REPO_SQUID'
   },
   gitHubRepoCreateWorkflows: {
     doc: 'GitHub repository containing the create workflows',
